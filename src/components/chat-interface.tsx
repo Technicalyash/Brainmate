@@ -1,22 +1,33 @@
 "use client";
 
-import { useChat } from "ai/react";
+// Import from the correct package for the Vercel AI SDK React hooks
+import { useChat } from "@ai-sdk/react";
 import { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Define a local Message type that is compatible with what the UI expects
+// The SDK's Message type might be stricter, so we can cast if needed, 
+// or just use 'any' for the map if types are tricky. 
+// For now, let's trust useChat returns messages with id, role, content.
+interface Message {
+    id: string;
+    role: string;
+    content: string;
+}
 
 export function ChatInterface() {
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
         initialMessages: [
             {
                 id: "welcome",
-                role: "assistant",
+                role: "assistant", // This is valid in SDK v3/v4
                 content: "I am BrainMate. State your objective.",
             },
         ],
     });
-    
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -78,7 +89,7 @@ export function ChatInterface() {
                     ))}
                 </AnimatePresence>
 
-                {isLoading && (
+                {isLoading && messages[messages.length - 1]?.role === "user" && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -105,6 +116,7 @@ export function ChatInterface() {
                         onChange={handleInputChange}
                         placeholder="Type your solution or question..."
                         className="w-full bg-white/5 border border-white/10 focus:border-indigo-500/50 rounded-xl px-4 py-3 pr-12 text-sm text-white placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 transition-all font-mono"
+                        disabled={isLoading}
                     />
                     <button
                         type="submit"
